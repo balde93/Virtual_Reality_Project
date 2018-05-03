@@ -1,0 +1,107 @@
+#include "player.s3d"
+
+class level
+{
+	var mesh_floor;
+	var material_floor;
+	var texture_floor;
+	var matrix_level;
+	var mesh_wall;
+	var material_wall;
+	var texture_wall;
+	var array_wall;
+	var array_player;
+	init();
+	draw();
+	update();
+	addplayer(id, color, pos);
+};
+
+function level::addplayer(id, color, pos)
+{
+	var p = player();
+	p.init(id,color,pos);
+	aadd(array_player,p);
+}
+
+function level::update()
+{
+	foreach (var i in array_player)
+		i.update(matrix_level); 
+}
+
+
+function level::init()
+{
+	array_player = array(0);
+	// Floor creation
+	mesh_floor = CVmNewMesh(VRP_BOX);
+	mesh_floor.scale(32,1,32);
+	mesh_floor.translate(0,-1,0);
+	
+	material_floor = CVmMaterial();
+	material_floor.diffuse = [0,1,0,1];
+	material_floor.ChangeTextureParams(VR_U_TILING,FLOOR_TILING);
+	material_floor.ChangeTextureParams(VR_V_TILING,FLOOR_TILING);
+	
+	texture_floor = CVmTexture("marmo.png");
+	
+	material_floor.SetTexture(texture_floor);
+	mesh_floor.ForceMaterial(material_floor);
+	
+	// Wall creation
+	mesh_wall = CVmNewMesh(VRP_BOX);
+	mesh_wall.scale(1,WALL_HEIGHT,1);
+	
+	material_wall = CVmMaterial();
+	material_wall.diffuse = [1,1,1,1];
+	material_wall.ChangeTextureParams(VR_V_TILING,WALL_HEIGHT);
+	texture_wall = CVmTexture("mattoni04.png");
+	
+	material_wall.SetTexture(texture_wall);
+	mesh_wall.ForceMaterial(material_wall);
+	
+	// Level creation
+	var array_rows = LoadFile("level.txt");
+	trace(array_rows);
+	var array_rows_length = len(array_rows);
+	var array_columns_length = len(array_rows[0]);
+	trace(array_rows_length, array_columns_length);
+	array_wall = array(0);
+	matrix_level = array(array_rows_length - 1);
+	
+	for (var i=0; i < array_rows_length - 1; i++)
+	{
+		matrix_level[i] = array(array_columns_length);
+		for (var j=0; j < array_columns_length; j++)
+		{
+			var temp = array_rows[i][j];
+			if (temp == "*")
+			{
+				var tempobj = CVmObj(mesh_wall);
+				tempobj.SetPosition(j,0,i);
+				aadd(array_wall,tempobj);
+				matrix_level[i][j] = 1;
+			}
+			else
+				matrix_level[i][j] = 0;
+		}
+	}
+	trace(matrix_level);
+}
+
+function level::draw()
+{
+	mesh_floor.Draw();
+	//mesh_wall.Draw();
+//	var l = len(array_wall);
+//	for (var i=0; i<l ; i++)
+//		array_wall[i].Draw();
+
+	foreach (var i in array_wall)
+		i.Draw();
+		
+	foreach (var i in array_player)
+		i.Draw();	
+		
+}
